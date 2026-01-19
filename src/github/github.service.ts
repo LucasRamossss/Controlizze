@@ -11,8 +11,8 @@ export class GithubService {
     return token;
   }
 
-  async getMe() {
-    const res = await fetch('https://api.github.com/user', {
+  private async githubGet(url: string) {
+    const res = await fetch(url, {
       headers: {
         Authorization: 'Bearer ' + this.token,
         'X-GitHub-Api-Version': '2022-11-28',
@@ -27,5 +27,34 @@ export class GithubService {
     }
 
     return res.json();
+  }
+
+  async getMe() {
+    return this.githubGet('https://api.github.com/user');
+  }
+
+  async listRepos(page = 1, perPage = 10) {
+    const url =
+      'https://api.github.com/user/repos?sort=updated&direction=desc' +
+      '&page=' +
+      page +
+      '&per_page=' +
+      perPage;
+
+    return this.githubGet(url);
+  }
+
+  async listCommits(owner: string, repo: string, page = 1, perPage = 10) {
+    const url =
+      'https://api.github.com/repos/' +
+      owner +
+      '/' +
+      repo +
+      '/commits?page=' +
+      page +
+      '&per_page=' +
+      perPage;
+
+    return this.githubGet(url);
   }
 }
