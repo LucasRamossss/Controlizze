@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Snapshot {
+  id             String   @id @default(cuid())
+  owner          String
+  repo           String
+  base           String
+  head           String
+  totalCommits   Int
+  filesChanged   Int
+  additionsTotal Int
+  deletionsTotal Int
+  createdAt      DateTime @default(now())
+
+  files          SnapshotFile[]
+}
+
+model SnapshotFile {
+  id         String   @id @default(cuid())
+  snapshotId String
+  filename   String
+  status     String
+  additions  Int
+  deletions  Int
+  changes    Int
+
+  snapshot   Snapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@index([snapshotId])
+}

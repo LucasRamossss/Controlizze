@@ -1,9 +1,13 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { GithubService } from '../github/github.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ControlizzeService {
-  constructor(private readonly github: GithubService) {}
+  constructor(
+    private readonly github: GithubService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async summary(owner: string, repo: string, base: string, head: string) {
     const compare = await this.github.compareCommits(owner, repo, base, head);
@@ -58,6 +62,49 @@ export class ControlizzeService {
       deletionsTotal,
       topFiles,
       commits: normalizedCommits,
+      files: normalizedFiles,
     };
+  }
+
+  async createSnapshot(owner: string, repo: string, base: string, head: string) {
+    const data = await this.summary(owner, repo, base, head);
+
+    return this.prisma.snapshot.create({
+      data: {
+        owner,
+        repo,
+        base,
+        head,
+        totalCommits: data.totalCommits,
+        filesChanged: data.filesChanged,
+        additionsTotal: data.additionsTotal,
+        deletionsTotal: data.deletionsTotal,
+        files: {
+          create: data.files.map((f) => ({
+            filename: f.filename,
+            status: f.status,
+            additions: f.additions,
+            deletions: f.deletions,
+            changes: f.changes,
+          })),
+        },
+      },
+      include: { files: true },
+    });
+  }
+
+  async listSnapshots(owner: string, repo: string) {
+    return this.prisma.snapshot.findMany({
+      where: { owner, repo },
+      orderBy: { createdAt: 'desc' },
+      include: { files: true },
+    });
+  }
+
+  async getSnapshot(owner: string, repo: string, id: string) {
+    return this.prisma.snapshot.findFirst({
+      where: { id, owner, repo },
+      include: { files: true },
+    });
   }
 }
