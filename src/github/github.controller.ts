@@ -11,10 +11,7 @@ export class GithubController {
   }
 
   @Get('repos')
-  repos(
-    @Query('page') page?: string,
-    @Query('perPage') perPage?: string,
-  ) {
+  repos(@Query('page') page?: string, @Query('perPage') perPage?: string) {
     const p = page ? Number(page) : 1;
     const pp = perPage ? Number(perPage) : 10;
     return this.github.listRepos(p, pp);
@@ -30,5 +27,21 @@ export class GithubController {
     const p = page ? Number(page) : 1;
     const pp = perPage ? Number(perPage) : 10;
     return this.github.listCommits(owner, repo, p, pp);
+  }
+
+  @Get('compare/:owner/:repo')
+  compare(
+    @Param('owner') owner: string,
+    @Param('repo') repo: string,
+    @Query('base') base?: string,
+    @Query('head') head?: string,
+  ) {
+    if (!base || !head) {
+      return {
+        error: 'Missing query params. Use ?base=<sha>&head=<sha>',
+      };
+    }
+
+    return this.github.compareCommits(owner, repo, base, head);
   }
 }

@@ -57,4 +57,18 @@ export class GithubService {
 
     return this.githubGet(url);
   }
+
+  async compareCommits(owner: string, repo: string, base: string, head: string) {
+    const url =
+      'https://api.github.com/repos/' +
+      owner +
+      '/' +
+      repo +
+      '/compare/' +
+      base +
+      '...' +
+      head;
+
+    return this.githubGet(url);
+  }
 }
